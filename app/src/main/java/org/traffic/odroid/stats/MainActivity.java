@@ -16,15 +16,8 @@ import java.net.URL;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 public class MainActivity extends AppCompatActivity {
     private Handler mHandler = new Handler();
-    private Handler mPostHandler = new Handler();
 
     private long mStartRX = 0;
     private long mStartTX = 0;
@@ -40,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             } finally {
                 Executors.newSingleThreadScheduledExecutor().schedule(this,
-                        500,
+                        1000,
                         TimeUnit.MILLISECONDS);
             }
         }
@@ -55,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             RX.setText(Long.toString(rxBytes));
             long txBytes = TrafficStats.getUidTxBytes(getApplicationInfo().uid);
             TX.setText(Long.toString(txBytes));
-            mHandler.postDelayed(mRunnable, 500);
+            mHandler.postDelayed(mRunnable, 1000);
         }
     };
 
@@ -70,9 +63,9 @@ public class MainActivity extends AppCompatActivity {
             alert.setMessage("Device does not support traffic stat monitoring.");
             alert.show();
         } else {
-            mHandler.postDelayed(mRunnable, 500);
+            mHandler.postDelayed(mRunnable, 1000);
             Executors.newSingleThreadScheduledExecutor().schedule(mPostRunnable,
-                    500,
+                    1000,
                     TimeUnit.MILLISECONDS);
         }
     }
@@ -116,38 +109,5 @@ public class MainActivity extends AppCompatActivity {
         conn.setConnectTimeout(30 * 1000);
         conn.setReadTimeout(30 * 1000);
         return conn;
-    }
-
-
-    /**
-     * you cannot see anything using  okhttp3
-     * @param url
-     * @param threadTag
-     */
-    private void getUsingOkHTTP3(String url, int threadTag) {
-        String responseString=null;
-        TrafficStats.setThreadStatsTag(threadTag);
-
-        OkHttpClient client = new OkHttpClient
-                .Builder()
-                .readTimeout(50, TimeUnit.SECONDS)
-                .writeTimeout(50,TimeUnit.SECONDS)
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .build();
-        Request request = new Request.Builder().url(url).build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-                TrafficStats.clearThreadStatsTag();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                Log.i(TAG,response.body().string());
-                TrafficStats.clearThreadStatsTag();
-
-            }
-        });
     }
 }
